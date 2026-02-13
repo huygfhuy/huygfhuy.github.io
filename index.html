@@ -20,14 +20,14 @@
 
         canvas { position: fixed; top: 0; left: 0; z-index: 1; pointer-events: none; }
         
-        /* CĂN GIỮ BAO LÌ XÌ TUYỆT ĐỐI */
+        /* BAO LÌ XÌ */
         #lixi-wrap {
             position: relative; z-index: 10;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
 
         .lixi {
-            width: 170px; height: 260px; 
+            width: 160px; height: 250px; 
             background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
             border-radius: 15px; border: 2px solid var(--gold);
             display: flex; align-items: center; justify-content: center;
@@ -37,14 +37,14 @@
         }
 
         .lixi::before {
-            content: ""; position: absolute; top: 0; width: 100%; height: 50px;
+            content: ""; position: absolute; top: 0; width: 100%; height: 45px;
             background: #9e0000; border-radius: 15px 15px 50% 50%; border-bottom: 2px solid var(--gold);
         }
 
         .circle-open {
-            width: 80px; height: 80px; background: radial-gradient(circle, #fff9c4, var(--gold));
+            width: 75px; height: 75px; background: radial-gradient(circle, #fff9c4, var(--gold));
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            color: #b71c1c; font-weight: bold; font-size: 1.6rem; border: 4px solid #8d0000;
+            color: #b71c1c; font-weight: bold; font-size: 1.5rem; border: 4px solid #8d0000;
             box-shadow: 0 0 20px var(--gold); z-index: 2;
         }
 
@@ -53,17 +53,27 @@
         /* THIỆP CHÚC */
         .card { 
             position: absolute; z-index: 20; padding: 25px; border: 4px solid var(--gold); 
-            background: rgba(0, 0, 0, 0.96); border-radius: 30px; width: 90%; max-width: 550px; 
+            background: rgba(0, 0, 0, 0.96); border-radius: 30px; width: 90%; max-width: 500px; 
             display: none; opacity: 0; transform: scale(0.5);
             transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             text-align: center;
         }
         .card.active { display: block; opacity: 1; transform: scale(1); }
 
-        #name { font-size: 2.2rem; color: #fff; margin: 10px 0; display: block; font-weight: bold; text-shadow: 0 0 10px var(--gold); }
-        #wish { font-size: 16px; line-height: 1.6; color: #fff; white-space: pre-wrap; min-height: 150px; padding: 15px; border-radius: 15px; border: 1px dashed var(--gold); background: rgba(255,255,255,0.05); }
+        h1 { font-size: 1.2rem; margin: 0; padding-bottom: 10px; border-bottom: 1px solid var(--gold); }
+        #name { font-size: 2rem; color: #fff; margin: 15px 0; display: block; font-weight: bold; text-shadow: 0 0 10px var(--gold); }
+        #wish { font-size: 15px; line-height: 1.6; color: #fff; white-space: pre-wrap; min-height: 120px; padding: 15px; border-radius: 15px; border: 1px dashed var(--gold); background: rgba(255,255,255,0.05); }
 
-        #music-control { position: fixed; bottom: 20px; right: 20px; z-index: 100; background: var(--gold); border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 20px; }
+        /* DÒNG CHỮ DƯỚI CÙNG (ĐÃ CHỈNH NHỎ) */
+        .footer-text {
+            font-size: 0.9rem; /* Độ nhỏ của icon và chữ ở dưới */
+            margin-top: 15px;
+            color: var(--gold);
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        #music-control { position: fixed; bottom: 20px; right: 20px; z-index: 100; background: var(--gold); border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 18px; }
     </style>
 </head>
 <body>
@@ -81,13 +91,14 @@
     </div>
 
     <div class="card" id="main-card">
-        <h1>🧧 HAPPY NEW YEAR 2026</h1>
+        <h1>🧧 HAPPY NEW YEAR 2026 🧧</h1>
         <span id="name">Đang tải...</span>
         <div id="wish"></div>
-        <div style="font-size: 2rem; margin-top: 15px;">🌸 🧧 🧨</div>
+        <div class="footer-text">🌸🧧🧨 nhớ lì xì cho tui nha 🧨🧧🌸</div>
     </div>
 
     <script>
+        // Link CSV của bạn
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vReifCieYeae54H_1UEYD43ETUGjAWeleLtIFKRadnlaM3H-I7dsTeaoRhFZREssmJ08HCjXV900Oms/pub?gid=0&single=true&output=csv';
         let finalName = "Bạn bè", finalWish = "Chúc mừng năm mới 2026 rực rỡ!";
         let isMusicPlaying = false;
@@ -144,17 +155,19 @@
                 }
             }
             type();
-            for(let j=0; j<20; j++) setTimeout(() => createFirework(Math.random()*window.innerWidth, Math.random()*window.innerHeight), j*200);
+            // Nổ pháo hoa lớn khi mở
+            for(let j=0; j<15; j++) setTimeout(() => createFirework(Math.random()*window.innerWidth, Math.random()*window.innerHeight), j*200);
         }
 
         // --- PHÁO HOA ---
         const canvas = document.getElementById('fireworks'), ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
         let particles = [];
+
         class Particle {
             constructor(x, y, color, vel) {
                 this.x = x; this.y = y; this.color = color; this.vel = vel;
-                this.alpha = 1; this.friction = 0.95; this.gravity = 0.2;
+                this.alpha = 1; this.friction = 0.95; this.gravity = 0.18;
             }
             update() {
                 this.vel.x *= this.friction; this.vel.y *= this.friction; this.vel.y += this.gravity;
@@ -165,21 +178,26 @@
                 ctx.arc(this.x, this.y, 2, 0, Math.PI*2); ctx.fillStyle = this.color; ctx.fill(); ctx.restore();
             }
         }
+
         function createFirework(x, y) {
             const colors = ['#ffd700', '#ff3131', '#ffffff', '#00ff00', '#00ffff'];
             const color = colors[Math.floor(Math.random()*colors.length)];
-            for(let i=0; i<100; i++) {
-                const angle = (Math.PI*2/100)*i;
-                const speed = Math.random()*12 + 2;
+            const particleCount = 100; // Độ dày của tia pháo
+            for(let i=0; i < particleCount; i++) {
+                const angle = (Math.PI*2 / particleCount) * i;
+                const speed = Math.random()*10 + 2;
                 particles.push(new Particle(x, y, color, { x: Math.cos(angle)*speed, y: Math.sin(angle)*speed }));
             }
         }
+
         function animate() {
             ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fillRect(0,0,canvas.width,canvas.height);
-            particles.forEach((p, i) => { if(p.alpha>0){ p.update(); p.draw(); } else particles.splice(i,1); });
-            if(Math.random()<0.08) createFirework(Math.random()*canvas.width, Math.random()*canvas.height*0.7);
+            particles.forEach((p, i) => { if(p.alpha > 0){ p.update(); p.draw(); } else particles.splice(i,1); });
+            // Tần suất nổ tự động (đã giảm xuống mức vừa phải)
+            if(Math.random() < 0.04) createFirework(Math.random()*canvas.width, Math.random()*canvas.height*0.7);
             requestAnimationFrame(animate);
         }
+
         window.addEventListener('mousedown', (e) => createFirework(e.clientX, e.clientY));
         window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
         animate(); loadData();
