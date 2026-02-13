@@ -51,100 +51,108 @@
     <div class="card" id="main-card"><div id="content-body"></div></div>
 
     <script>
-        // Link chuẩn của bạn
-        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ4Ac7TOm2fuHtn3AfNHa6mZE371XP85Yu3CWNxtgCgtl26KZawLofyW6esQCv4oeXzJAQnGuFHmfZK/pub?gid=0&single=true&output=csv';
-        
-        let finalName = "Bạn";
-        let finalWish = "Chúc mừng năm mới 2026 rực rỡ!";
+    // Link chuẩn của bạn
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ4Ac7TOm2fuHtn3AfNHa6mZE371XP85Yu3CWNxtgCgtl26KZawLofyW6esQCv4oeXzJAQnGuFHmfZK/pub?gid=0&single=true&output=csv';
+    
+    let finalName = "Bạn";
+    let finalWish = "Chúc mừng năm mới 2026 rực rỡ!";
 
-        // HÀM QUAN TRỌNG: Tải và xử lý dữ liệu
-        async function loadData() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const targetId = urlParams.get('id')?.toLowerCase().trim();
+    async function loadData() {
+        const urlParams = new URLSearchParams(window.location.search);
+        // Chuyển ID về chữ thường để so sánh cho dễ
+        const targetId = urlParams.get('id')?.toLowerCase().trim();
 
-            if (!targetId) return;
+        if (!targetId) return;
 
-            try {
-                const response = await fetch(CSV_URL + '?t=' + Date.now());
-                const rawData = await response.text();
+        try {
+            // Thêm Date.now() để ép trình duyệt không lấy bản cũ (cache)
+            const response = await fetch(CSV_URL + '&cachebuster=' + Date.now());
+            const rawData = await response.text();
+            
+            // Xử lý file CSV: Tách dòng và loại bỏ ký tự rác đầu file
+            const rows = rawData.replace(/^\uFEFF/, '').split(/\r?\n/);
+            
+            // Duyệt từ dòng 2 (bỏ qua dòng tiêu đề ID, WISH)
+            for (let i = 1; i < rows.length; i++) {
+                // Tách cột theo dấu phẩy chuẩn CSV
+                const columns = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 
-                // Xử lý lỗi ký tự lạ (BOM) và tách dòng
-                const rows = rawData.replace(/^\uFEFF/, '').split(/\r?\n/);
-                
-                for (let row of rows) {
-                    // Tách cột bằng dấu phẩy, xử lý cả trường hợp nội dung có dấu phẩy bên trong ngoặc kép
-                    const columns = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                    if (columns.length >= 1) {
-                        let idInSheet = columns[0].replace(/^"|"$/g, '').trim();
-                        if (idInSheet.toLowerCase() === targetId) {
-                            finalName = idInSheet;
-                            finalWish = columns[1] ? columns[1].replace(/^"|"$/g, '').trim() : finalWish;
-                            console.log("Đã tìm thấy:", finalName);
-                            break;
-                        }
+                if (columns.length >= 2) {
+                    let idInSheet = columns[0].replace(/^"|"$/g, '').trim();
+                    let wishInSheet = columns[1].replace(/^"|"$/g, '').trim();
+
+                    // So sánh không phân biệt hoa thường
+                    if (idInSheet.toLowerCase() === targetId) {
+                        finalName = idInSheet; 
+                        finalWish = wishInSheet || finalWish;
+                        console.log("Đã tìm thấy dữ liệu:", finalName);
+                        break;
                     }
                 }
-            } catch (error) {
-                console.error("Lỗi đọc dữ liệu:", error);
+            }
+        } catch (error) {
+            console.error("Lỗi đọc dữ liệu:", error);
+        }
+    }
+
+    function openLixi() {
+        document.getElementById('lixi-container').style.display = 'none';
+        const card = document.getElementById('main-card');
+        card.style.display = 'block';
+        setTimeout(() => card.classList.add('active'), 50);
+        renderContent(finalName, finalWish);
+    }
+
+    function renderContent(n, w) {
+        document.getElementById('content-body').innerHTML = `
+            <h1>🧧 CHÚC MỪNG NĂM MỚI</h1>
+            <span id="name">${n} ơi!</span>
+            <div id="wish"></div>
+            <div class="footer">🌸 🧨 🧧</div>
+        `;
+        const wishDiv = document.getElementById("wish");
+        // Hỗ trợ cả xuống dòng bằng <br> hoặc phím Enter
+        let cleanText = w.replace(/<br\s*\/?>/gi, '\n');
+        let i = 0;
+        function typeWriter() {
+            if (i < cleanText.length) {
+                wishDiv.textContent += cleanText.charAt(i);
+                i++;
+                setTimeout(typeWriter, 60); // Đẩy tốc độ nhanh hơn xíu cho đỡ sốt ruột
             }
         }
+        typeWriter();
+        // Bắn pháo hoa ăn mừng
+        for(let j=0; j<8; j++) setTimeout(() => createFirework(Math.random()*window.innerWidth, Math.random()*window.innerHeight), j*400);
+    }
 
-        function openLixi() {
-            document.getElementById('lixi-container').style.display = 'none';
-            const card = document.getElementById('main-card');
-            card.style.display = 'block';
-            setTimeout(() => card.classList.add('active'), 50);
-            renderContent(finalName, finalWish);
+    // --- LOGIC PHÁO HOA (GIỮ NGUYÊN) ---
+    const canvas = document.getElementById('fireworks'), ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    let p = [];
+    class Particle {
+        constructor(x, y, c) {
+            this.x = x; this.y = y; this.c = c;
+            this.v = { x: (Math.random()-0.5)*10, y: (Math.random()-0.5)*10 };
+            this.a = 1;
         }
-
-        function renderContent(n, w) {
-            document.getElementById('content-body').innerHTML = `
-                <h1>🧧 CHÚC MỪNG NĂM MỚI</h1>
-                <span id="name">${n} ơi!</span>
-                <div id="wish"></div>
-                <div class="footer">🌸 🧨 🧧</div>
-            `;
-            const wishDiv = document.getElementById("wish");
-            let cleanText = w.replace(/<br\s*\/?>/gi, '\n');
-            let i = 0;
-            function typeWriter() {
-                if (i < cleanText.length) {
-                    wishDiv.textContent += cleanText.charAt(i);
-                    i++;
-                    setTimeout(typeWriter, 80);
-                }
-            }
-            typeWriter();
-            // Bắn pháo hoa
-            for(let j=0; j<5; j++) setTimeout(() => createFirework(Math.random()*window.innerWidth, Math.random()*window.innerHeight), j*500);
-        }
-
-        // --- PHÁO HOA ---
-        const canvas = document.getElementById('fireworks'), ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        let p = [];
-        class Particle {
-            constructor(x, y, c) {
-                this.x = x; this.y = y; this.c = c;
-                this.v = { x: (Math.random()-0.5)*10, y: (Math.random()-0.5)*10 };
-                this.a = 1;
-            }
-            draw() { ctx.save(); ctx.globalAlpha = this.a; ctx.beginPath(); ctx.arc(this.x, this.y, 2, 0, Math.PI*2); ctx.fillStyle = this.c; ctx.fill(); ctx.restore(); }
-            update() { this.x += this.v.x; this.y += this.v.y; this.a -= 0.01; }
-        }
-        function createFirework(x, y) {
-            const colors = ['#ffd700', '#ff3131', '#00ff00', '#00ffff'];
-            const color = colors[Math.floor(Math.random()*colors.length)];
-            for(let i=0; i<60; i++) p.push(new Particle(x, y, color));
-        }
-        function animate() {
-            ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fillRect(0,0,canvas.width,canvas.height);
-            p.forEach((it, i) => { if(it.a > 0) { it.update(); it.draw(); } else p.splice(i, 1); });
-            requestAnimationFrame(animate);
-        }
-        window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-        animate(); 
-        loadData(); // Tải dữ liệu ngay khi load trang
-    </script>
+        draw() { ctx.save(); ctx.globalAlpha = this.a; ctx.beginPath(); ctx.arc(this.x, this.y, 2.5, 0, Math.PI*2); ctx.fillStyle = this.c; ctx.fill(); ctx.restore(); }
+        update() { this.x += this.v.x; this.y += this.v.y; this.a -= 0.01; }
+    }
+    function createFirework(x, y) {
+        const colors = ['#ffd700', '#ff3131', '#00ff00', '#00ffff', '#ffffff'];
+        const color = colors[Math.floor(Math.random()*colors.length)];
+        for(let i=0; i<80; i++) p.push(new Particle(x, y, color));
+    }
+    function animate() {
+        ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+        p.forEach((it, i) => { if(it.a > 0) { it.update(); it.draw(); } else p.splice(i, 1); });
+        requestAnimationFrame(animate);
+    }
+    window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    animate(); 
+    loadData();
+</script>
 </body>
+
 </html>
